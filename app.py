@@ -246,7 +246,7 @@ st.title("🌟 Phoneme Prophecy: Discover Your Cosmic Essence 🌟")
 st.header("Enter Your Name to Unveil Your Spiritual Narrative 🪷")
 st.write("Type your name below, and let the ancient wisdom of Sanskrit phonemes reveal your chakra, rasa, bhava, and deva, woven into a poetic prose of your soul’s journey! ✨🙏")
 
-name = st.text_input("Your Name", placeholder="e.g., Amit, Zoe, Xavier")
+name = st.text_input("Your Name", placeholder="e.g., Mahan H R Gowda")
 if st.button("Generate Prophecy 🚀"):
     if name:
         with st.spinner("Crafting your cosmic narrative... 🌌"):
