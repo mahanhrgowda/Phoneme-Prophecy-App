@@ -12,6 +12,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Log PyTorch version
+logger.info(f"PyTorch version: {torch.__version__}")
+
 # Define the model architecture
 class MultiLabelNN(nn.Module):
     def __init__(self, input_size, hidden_sizes, output_size):
