@@ -6,6 +6,11 @@ import joblib
 import re
 from collections import Counter
 import random
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define the model architecture
 class MultiLabelNN(nn.Module):
@@ -27,27 +32,50 @@ class MultiLabelNN(nn.Module):
 # Load model and supporting files
 @st.cache_resource
 def load_model():
-    input_size = 51
-    hidden_sizes = [128, 64, 32]
-    output_size = 30
-    model = MultiLabelNN(input_size, hidden_sizes, output_size)
-    checkpoint = torch.load("multi_label_model.pt", map_location=torch.device('cpu'))
-    model.load_state_dict(checkpoint['model_state_dict'])
-    model.eval()
-    return model
+    try:
+        input_size = 51
+        hidden_sizes = [128, 64, 32]
+        output_size = 30
+        model = MultiLabelNN(input_size, hidden_sizes, output_size)
+        checkpoint = torch.load("multi_label_model.pt", map_location=torch.device('cpu'))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+        logger.info("Model loaded successfully")
+        return model
+    except Exception as e:
+        logger.error(f"Error loading model: {e}")
+        st.error(f"Failed to load model: {e}")
+        raise
 
 @st.cache_resource
 def load_binarizer():
-    return joblib.load("multi_label_binarizer.joblib")
+    try:
+        binarizer = joblib.load("multi_label_binarizer.joblib")
+        logger.info("Binarizer loaded successfully")
+        return binarizer
+    except Exception as e:
+        logger.error(f"Error loading binarizer: {e}")
+        st.error(f"Failed to load binarizer: {e}")
+        raise
 
 @st.cache_resource
 def load_phonemes():
-    return joblib.load("phonemes.joblib")
+    try:
+        phonemes = joblib.load("phonemes.joblib")
+        logger.info("Phonemes loaded successfully")
+        return phonemes
+    except Exception as e:
+        logger.error(f"Error loading phonemes: {e}")
+        st.error(f"Failed to load phonemes: {e}")
+        raise
 
 # Initialize model and data
-model = load_model()
-mlb = load_binarizer()
-all_phonemes = load_phonemes()
+try:
+    model = load_model()
+    mlb = load_binarizer()
+    all_phonemes = load_phonemes()
+except Exception:
+    st.stop()
 
 # Expanded phoneme mapping
 phoneme_map = {
@@ -110,7 +138,7 @@ def generate_prose(name, chakra, rasa, bhava, deva):
         ]
     }
 
-    # Rasa templates (example, extend for all rasas)
+    # Rasa templates
     rasa_templates = {
         "Shringara": [
             "The essence of **Shringara**, love and beauty, courses through your spirit. 🌹",
@@ -121,10 +149,30 @@ def generate_prose(name, chakra, rasa, bhava, deva):
             "**Karuna**, compassion’s gentle rasa, flows through you, healing all it touches. 😢",
             "Your spirit embodies **Karuna**, a river of empathy nourishing weary souls. 🌧️",
             "In **Karuna**, your heart weeps for the world, transforming sorrow into light. 💧"
+        ],
+        "Bhayanaka": [
+            "**Bhayanaka**, the rasa of awe and fear, stirs your soul with primal strength. 🌪️",
+            "Your spirit channels **Bhayanaka**, facing life’s mysteries with bold courage. ⚡️",
+            "**Bhayanaka** fuels your heart, a storm of resilience that defies all odds. 🪐"
+        ],
+        "Adbhuta": [
+            "**Adbhuta**, the rasa of wonder, sparkles within you, a star of marvel and awe. ✨",
+            "Your soul radiates **Adbhuta**, embracing the universe’s miracles with joy. 🌈",
+            "In **Adbhuta**, your spirit dances with the magic of life’s endless surprises. 🎉"
+        ],
+        "Veera": [
+            "**Veera**, the rasa of heroism, blazes in your heart, a fire of valor and might. 🔥",
+            "Your spirit embodies **Veera**, a warrior’s courage that conquers all fears. 🗡️",
+            "**Veera** drives your soul, a beacon of strength in the cosmic arena. 💪"
+        ],
+        "Shanta": [
+            "**Shanta**, the rasa of peace, calms your spirit like a serene moonlit lake. 🕉️",
+            "Your soul flows with **Shanta**, a tranquil oasis amidst life’s storms. 🌙",
+            "In **Shanta**, your heart rests in divine stillness, reflecting eternal harmony. 🌿"
         ]
     }
 
-    # Deva templates (example, extend for all devas)
+    # Deva templates
     deva_templates = {
         "Saraswati": [
             "Guided by **Saraswati**, goddess of wisdom, you weave symphonies of knowledge. 📜",
@@ -135,6 +183,36 @@ def generate_prose(name, chakra, rasa, bhava, deva):
             "Under **Vishnu**’s embrace, your soul preserves harmony across the universe. 🌍",
             "**Vishnu**, the cosmic guardian, infuses you with strength and compassion. 🪐",
             "Guided by **Vishnu**, your spirit sustains balance like an eternal ocean. 🌊"
+        ],
+        "Ganesha": [
+            "**Ganesha**, remover of obstacles, paves your path with divine wisdom. 🐘",
+            "Your soul is blessed by **Ganesha**, a guide through life’s intricate mazes. 🕉️",
+            "With **Ganesha**’s grace, your spirit triumphs over all challenges. 🌟"
+        ],
+        "Brahma": [
+            "**Brahma**, the creator, ignites your soul with the spark of divine creation. 🌌",
+            "Your spirit channels **Brahma**, weaving new worlds with boundless imagination. 🎨",
+            "Guided by **Brahma**, your essence births beauty from the cosmic void. ✨"
+        ],
+        "Surya": [
+            "**Surya**, the radiant sun, fuels your spirit with life-giving energy. ☀️",
+            "Your soul shines with **Surya**, a beacon of vitality and divine light. 🔥",
+            "Under **Surya**’s gaze, your spirit blazes a trail of glory through the cosmos. 🌞"
+        ],
+        "Shiva": [
+            "**Shiva**, the cosmic dancer, guides your soul through the eternal cycle. 🕉️",
+            "Your spirit resonates with **Shiva**, a force of transformation and renewal. 🌑",
+            "Blessed by **Shiva**, your essence transcends, merging with the infinite. 🌌"
+        ],
+        "Paramatman": [
+            "**Paramatman**, the supreme soul, unites your spirit with the divine source. 🪷",
+            "Your soul merges with **Paramatman**, a spark of the eternal consciousness. 🌠",
+            "Guided by **Paramatman**, your essence is one with the cosmic infinite. 🙏"
+        ],
+        "Chandra": [
+            "**Chandra**, the moon’s gentle glow, bathes your soul in serene light. 🌙",
+            "Your spirit flows with **Chandra**, a tide of dreams and emotional depth. 🌊",
+            "Blessed by **Chandra**, your essence weaves poetry from the night sky. ✨"
         ]
     }
 
@@ -165,16 +243,17 @@ st.title("🌟 Phoneme Prophecy: Discover Your Cosmic Essence 🌟")
 st.header("Enter Your Name to Unveil Your Spiritual Narrative 🪷")
 st.write("Type your name below, and let the ancient wisdom of Sanskrit phonemes reveal your chakra, rasa, bhava, and deva, woven into a poetic prose of your soul’s journey! ✨🙏")
 
-name = st.text_input("Your Name", placeholder="e.g., Mahan H R Gowda")
+name = st.text_input("Your Name", placeholder="e.g., Amit, Zoe, Xavier")
 if st.button("Generate Prophecy 🚀"):
     if name:
         with st.spinner("Crafting your cosmic narrative... 🌌"):
             # Extract phonemes from name
             name = name.lower().replace(" ", "")
-            name_chars = re.findall(r'sh|[a-z]|\W', name)  # Handle digraphs like 'sh'
+            name_chars = re.findall(r'sh|[a-z]|\W', name)
             phoneme_weights = np.zeros(len(all_phonemes))
             found_phonemes = []
             
+            logger.info(f"Processing name: {name}, chars: {name_chars}")
             for char in name_chars:
                 if char in phoneme_map:
                     phoneme = phoneme_map[char]
@@ -182,23 +261,35 @@ if st.button("Generate Prophecy 🚀"):
                         idx = all_phonemes.index(phoneme)
                         phoneme_weights[idx] += 1
                         found_phonemes.append(phoneme)
+                    else:
+                        logger.warning(f"Phoneme {phoneme} not in all_phonemes")
+                else:
+                    logger.warning(f"Character {char} not in phoneme_map")
             
             # Normalize weights
             if phoneme_weights.sum() > 0:
                 phoneme_weights = phoneme_weights / phoneme_weights.sum()
+                logger.info(f"Phoneme weights: {phoneme_weights}")
             else:
                 st.error("No valid phonemes found in the name! Please try another name with letters a–z or special characters like @. 😔")
+                logger.error("No valid phonemes detected")
                 st.stop()
             
             # Predict
-            input_tensor = torch.FloatTensor(phoneme_weights).unsqueeze(0)
-            with torch.no_grad():
-                logits = model(input_tensor)
-                probs = torch.sigmoid(logits)
-                preds = (probs > 0.5).numpy().astype(int)
-            
-            predicted_labels = mlb.inverse_transform(preds)[0]
-            chakra, rasa, bhava, deva = predicted_labels
+            try:
+                input_tensor = torch.FloatTensor(phoneme_weights).unsqueeze(0)
+                with torch.no_grad():
+                    logits = model(input_tensor)
+                    probs = torch.sigmoid(logits)
+                    preds = (probs > 0.5).numpy().astype(int)
+                
+                predicted_labels = mlb.inverse_transform(preds)[0]
+                chakra, rasa, bhava, deva = predicted_labels
+                logger.info(f"Predictions: chakra={chakra}, rasa={rasa}, bhava={bhava}, deva={deva}")
+            except Exception as e:
+                logger.error(f"Prediction error: {e}")
+                st.error(f"Prediction failed: {e}")
+                st.stop()
             
             # Generate prose
             prose = generate_prose(name.capitalize(), chakra, rasa, bhava, deva)
